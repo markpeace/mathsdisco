@@ -1,0 +1,111 @@
+doctype html
+html
+    head
+        title DISCOTHEQUE MATHMATICA
+        script(type="text/javascript" src="/dependencies/sails.io.js")
+        script(type="text/javascript").
+            io.socket.on('connect', function onConnect(){
+                io.socket.on('update', function onServerSentEvent (msg) {
+                  document.getElementById("currentValue").innerHTML = msg.currentValue;
+                  document.getElementById("turns").innerHTML = msg.turns;
+                  if(msg.targetValue) {
+                    document.getElementById("targetValue").innerHTML = msg.targetValue;
+                    document.getElementById("distanceFromTarget").innerHTML=msg.targetValue-msg.currentValue
+                    document.getElementById("targetTab").style.display = "block";
+                    document.getElementById("preTargetTab").style.display = "none";
+                  } else {
+                    document.getElementById("turnsBeforeTarget").innerHTML = msg.turnsBeforeTarget-msg.turns;                    
+                    document.getElementById("targetTab").style.display = "none";
+                    document.getElementById("preTargetTab").style.display = "block";   
+                  }
+                  
+                  if(msg.won) {
+                    document.getElementById("won").style.display = "block";
+                    document.getElementById("notWon").style.display = "none";
+                  } else {
+                    document.getElementById("won").style.display = "none";
+                    document.getElementById("notWon").style.display = "block";                    
+                  }
+                  
+                });
+              console.log('This socket is now connected to the Sails server.');
+            });
+            
+        style.
+            /* monoton-regular - latin */
+            @font-face {
+              font-family: 'Monoton';
+              font-style: normal;
+              font-weight: 400;
+              src: local('Monoton'), local('Monoton-Regular'),
+                   url('../fonts/monoton-v7-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+                   url('../fonts/monoton-v7-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+            }
+            body {
+                background-color:black;
+                font-family: Monoton; font-size: 2em; color:blue; 
+                color:white; 
+                text-align: center;
+            }
+            .header {
+                font-size:2.5em;
+                color: white;
+                text-shadow: 0 0 10px white, 0 0 20px white, 0 0 30px white, 0 0 40px #FF1177, 0 0 70px #FF1177, 0 0 80px #FF1177, 0 0 100px #FF1177, 0 0 150px #FF1177;
+                padding-top: 100px;
+            }
+            .blueneon {
+              color: white;
+              text-shadow: 0 0 10px white, 0 0 20px white, 0 0 30px white, 0 0 40px blue, 0 0 70px blue, 0 0 80px blue, 0 0 100px blue, 0 0 150px blue;
+            }
+            .stats {width:100%; text-align:center;}
+            .tab{
+                padding:10%;
+                height:200px;
+                width:30%;
+                float: left;
+            }
+            .footer{
+                width:100%;
+                display:block;
+                padding-top: 100px;
+                font-size:1em;
+                color: white;
+                text-shadow: 0 0 10px white, 0 0 20px white, 0 0 30px white, 0 0 40px green, 0 0 70px green, 0 0 80px green, 0 0 100px green, 0 0 150px green;
+            }
+            .enlarge {
+                font-size:2em !important;
+            }
+            .reduce {
+                font-size:.75em;
+            }
+    body
+    
+        .header.
+            DISCOTHEQUE MATHEMATICA
+            
+        .stats#notWon(style="display:"+(global.won?"none":"block")+";")
+            .tab
+                .title.blueneon YOUR SCORE
+                #currentValue.blueneon.enlarge=global.currentValue
+                .blueneon.reduce
+                  | (
+                  span#turns=global.turns
+                  |  turns taken)
+            #targetTab.tab(style="display:"+(global.targetValue?"block":"none")+";")
+              .title.blueneon TARGET SCORE
+              #targetValue.blueneon.enlarge=global.targetValue
+              .reduce.blueneon
+                | (
+                span#distanceFromTarget=global.targetValue-global.currentValue
+                |  from target)
+            #preTargetTab.tab(style="display:"+(global.targetValue?"none":"block")+";")
+              .reduce.blueneon 
+                | Figure out what the tiles do. When you have taken 
+                span#turnsBeforeTarget=global.turnsBeforeTarget-global.turns 
+                |  more moves, you will be given a target to reach
+        
+        .stats#won(style="padding-top:100px; padding-bottom:150px; display:"+(global.won?"block":"none")+";")
+          .enlarge.blueneon WINNER!
+          .dummy.blueneon Congratulations; collect your cog
+        
+        .footer LEAVE THE DANCEFLOOR TO RESET THE GAME

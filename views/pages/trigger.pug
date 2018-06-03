@@ -1,0 +1,65 @@
+doctype html  
+html(lang='en')  
+    head
+        title MathsFloor Manual Trigger
+    style(type='text/css').
+        .gridholder {
+            margin: 0 auto;
+            margin-top:50px;
+            width:612px;
+            height:612px;
+        }
+        .titleholder {
+            margin: 0 auto;
+            margin-top:50px;
+            width:612px;
+            height:100px;
+        }
+        .title {
+            text-decoration:none !important;
+            color:black !important;
+            text-align:center;
+            width:49%;
+            height:100%;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            float:left;
+            border: 1px solid;
+        }
+        .heading{
+            font-size:60%;
+            font-weight:bold;
+        }
+        .value{
+            font-size:150%;
+            font-weight:bold;
+        }
+        .tile {
+            text-decoration:none !important;
+            color:black !important;
+            text-align:center;
+            width:100px;
+            height:100px;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            float:left;
+            border: 1px solid;
+        }
+    body
+        .titleholder
+            .title 
+                .heading  Current
+                .value=currentValue
+            .title
+                .heading  Target
+                .value=targetValue
+        .gridholder
+            for cell in grid
+                if !cell.selectable
+                    a.tile(href="/trigger/"+cell._n+"/"+onTile, style='background-color:hsl('+(cell.selected ? cell.effect.on.colour : cell.effect.off.colour)+',100%,'+(cell.selected ? 100-(cell.effect.on.brightness/2) : 100-(cell.effect.off.brightness/2) )+"%)")
+                        p(style='font-size:50%')
+                            =cell._n + ":" + cell.hwAddr
+                            br
+                            =100-(cell.effect.on.brightness/2)
