@@ -28,7 +28,7 @@ module.exports = {
 			for(s=1;s<=global.segments;s++) {
 				for(g=0;g<=5;g++) {
 					_gridMap.push(parseInt(""+s+g))
-				}
+				} 	
 			}
 
 			global.grid = []
@@ -51,8 +51,8 @@ module.exports = {
 				effect: "+2",
 				prevalence: 9 / 36, //RED
 				on: {
-					colour: 0,
-					brightness: 150
+					colour: 30,
+					brightness: 255
 				},
 				off: {
 					colour: 0,
@@ -62,8 +62,8 @@ module.exports = {
 				effect: "-2",
 				prevalence: 9 / 36, //GREEN
 				on: {
-					colour: 60,
-					brightness: 150
+					colour: 90,
+					brightness: 255
 				},
 				off: {
 					colour: 60,
@@ -73,8 +73,8 @@ module.exports = {
 				effect: "+6",
 				prevalence: 6 / 36, //BLUE
 				on: {
-					colour: 120,
-					brightness: 150
+					colour: 150,
+					brightness: 255
 				},
 				off: {
 					colour: 120,
@@ -84,8 +84,8 @@ module.exports = {
 				effect: "-6",
 				prevalence: 6 / 36, //
 				on: {
-					colour: 180,
-					brightness: 150
+					colour: 210,
+					brightness: 255
 				},
 				off: {
 					colour: 180,
@@ -95,8 +95,8 @@ module.exports = {
 				effect: "*2",
 				prevalence: 3 / 36, //
 				on: {
-					colour: 240,
-					brightness: 150
+					colour: 270,
+					brightness: 255
 				},
 				off: {
 					colour: 240,
@@ -106,8 +106,8 @@ module.exports = {
 				effect: "/2",
 				prevalence: 3 / 36, //
 				on: {
-					colour: 320,
-					brightness: 150
+					colour: 350,
+					brightness: 255
 				},
 				off: {
 					colour: 320,
@@ -124,9 +124,6 @@ module.exports = {
 
 			})
 
-			console.log("needs something to push tile settings to the grid");
-
-
 			var sends=[]
 			global.grid.forEach(tile=>{
 
@@ -142,33 +139,59 @@ module.exports = {
 				setTimeout(function(x){
 					console.log(sends[x]+"!");
 					global.port.write(sends[x])
-				},10*x,x)
+					
+					if(x==sends.length-1) {
+						console.log("opening browser");
+						require('child_process').exec("chromium-browser --incognito --start-maximized --kiosk http://localhost:1337"); //--incognito 
+						console.log("starting music");
+						require('child_process').exec("amixer cset numid=3 1; amixer sset PCM 0%;mpg123 -l -1 /home/pi/Desktop/www/assets/discotrack.mp3");
+					}
+
+				},50*x,x)
 			}
 
-			require('child_process').exec("amixer sset PCM mute");
+			r.reset();
 
+		}
+
+		r.reset = function () {
+			console.log("resetting")
+			require('child_process').exec("amixer sset PCM 0%");
 			global.soundActive=false;
 			global.currentValue = 0;
 			global.targetValue = null;
 			global.turns = 0;
-			global.turnsBeforeTarget = 15;
+			global.turnsBeforeTarget = 5;
 			global.players = 0;
 			global.won=false;
-
+			sails.sockets.blast("update", {
+				currentValue: global.currentValue,
+				targetValue: global.targetValue,
+				turns: global.turns,
+				turnsBeforeTarget: global.turnsBeforeTarget,
+				won:global.won,
+				players:global.players
+			});
 		}
 
-		r.report = function (message) {
+		r.report = function (message) {	
+
+			if(global.masterReset) { clearTimeout(global.masterReset) }
+
+			global.masterReset=setTimeout(r.reset,45000);
 
 			if(!global.soundActive) {
 				global.soundActive=true;
 				console.log("turn sound on!");
-				require('child_process').exec("amixer sset PCM unmute");
+				require('child_process').exec("amixer sset PCM 100%");
 			}
 
-			var hwAddr = parseInt(message.substring(1, 3));
+			var hwAddr = message.substring(1, 3);
 			var status = parseInt(message.substring(3, 4));
-
+			
 			target = global.grid.find(cell => cell.hwAddr == hwAddr)
+
+			if(!target) return;
 
 			target.selected = status == 1
 
@@ -185,14 +208,19 @@ module.exports = {
 			if (global.turns == global.turnsBeforeTarget) global.targetValue = Math.round(Math.random() * 1000);
 
 			global.players = global.players + (target.selected ? 1 : -1);
-			if (global.players == 0) r.initialise();
+			if (global.players < 1) {
+				setTimeout( ()=> {
+					if(global.players<1) r.reset();
+				},1000)
+			}
 
 			sails.sockets.blast("update", {
 				currentValue: global.currentValue,
 				targetValue: global.targetValue,
 				turns: global.turns,
 				turnsBeforeTarget: global.turnsBeforeTarget,
-				won:global.won
+				won:global.won,
+				players:global.players
 			});
 
 		}

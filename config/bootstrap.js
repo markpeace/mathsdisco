@@ -11,16 +11,11 @@
 
 module.exports.bootstrap = function (done) {
 
-	console.log("opening browser");
-	require('child_process').exec("chromium-browser --incognito --start-maximized --kiosk http://localhost:1337");
-	console.log("starting music");
-	require('child_process').exec("amixer sset PCM 100; mpg123 -l -1 /home/pi/Desktop/www/assets/discotrack.mp3");
-
 	var SerialPort = require('serialport');
 	const Readline = SerialPort.parsers.Readline;
 
 	global.port = new SerialPort('/dev/ttyUSB0', {
-		baudRate: 9600,
+		baudRate: 19200,
 		dataBits: 8,
 		hupddcl: false,
 		stopBits: 1,
@@ -33,6 +28,8 @@ module.exports.bootstrap = function (done) {
 
 	parser.on('data', d => {
 		//console.log(d);
+
+		if(d==global.lastCommand) return;
 
 		switch (d.substr(0, 1)) {
 			case "I":
@@ -47,6 +44,9 @@ module.exports.bootstrap = function (done) {
 				break;
 
 		}
+
+		global.commandBeforeThat=global.lastCommand
+		global.lastCommand=d
 
 	});
 
